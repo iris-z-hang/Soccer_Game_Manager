@@ -11,7 +11,7 @@
     </head>
 
     <body>
-        <h2>Here you can perform aggregation queries</h2>
+        <h2>Here you can find some oddly specific information</h2>
         <hr />
         <h2>Show a table</h2>
         <p>If you wish to see a table, choose a name and press on the show button. </p>
@@ -19,10 +19,9 @@
         <form method="GET" action="aggregations.php">
             <input type="hidden" id="showTablesRequest" name="showTablesRequest">
             Name: <select name="tName"> 
-                    <option>Club</option>
-                    <option>Player</option>
-                    <option>Game</option>
-                    <option>teamPlaysInGame</option>
+                    <option>Coach</option>
+                    <option>Player and team</option>
+                    <option>Game and stage</option>
                   </select> <br /> <br />
             <p><input type="submit" value="Show" name="showSubmit"></p>
         </form>
@@ -30,33 +29,33 @@
         <hr />
 
         <h2>Aggregation with Group By</h2>
-        <form method="POST" action="aggregations.php"> <!--refresh page when submitted-->
-            <input type="hidden" id="insertQueryRequest" name="insertQueryRequest">
-            Number: <input type="text" name="insNo"> <br /><br />
-            Name: <input type="text" name="insName"> <br /><br />
-
-            <input type="submit" value="Insert" name="insertSubmit"></p>
+        <form method="POST" action="aggregations.php"> 
+            <input type="hidden" id="groupByQueryRequest" name="groupByQueryRequest">
+            Find years of experience of the 
+            <select name="coach_experience">
+                <option>least</option>
+                <option>most</option>
+            </select> experienced coaches of each nationality <br /> <br/>
+            <input type="submit" value="Submit" name="groupBySubmit"></p>
         </form>
 
         <hr />
 
         <h2>Aggregation with Having</h2>
-        <p>The values are case sensitive and if you enter in the wrong case, the update statement will not do anything.</p>
 
-        <form method="POST" action="aggregations.php"> <!--refresh page when submitted-->
-            <input type="hidden" id="updateQueryRequest" name="updateQueryRequest">
-            Old Name: <input type="text" name="oldName"> <br /><br />
-            New Name: <input type="text" name="newName"> <br /><br />
-
-            <input type="submit" value="Update" name="updateSubmit"></p>
+        <form method="POST" action="aggregations.php"> 
+            <input type="hidden" id="havingQueryRequest" name="havingQueryRequest">
+            Find dates of birth of the oldest players who have spent more than <input type="number" name="yearsSpent" style="width: 50px"> years at their club, for each position with at least <input type="number" name = "entries" style="width: 50px"> such entries <br /><br />
+            <input type="submit" value="Submit" name="havingSubmit"></p>
         </form>
 
         <hr />
 
         <h2>Nested Aggregation with Group By</h2>
-        <form method="GET" action="aggregations.php"> <!--refresh page when submitted-->
-            <input type="hidden" id="countTupleRequest" name="countTupleRequest">
-            <input type="submit" name="countTuples"></p>
+        <form method="POST" action="aggregations.php"> 
+            Find the games with more scored goals than the average in each stage of the tournament <br/><br/>
+            <input type="hidden" id="nestedQueryRequest" name="nestedQueryRequest">
+            <input type="submit" value="Submit" name="nestedSubmit"></p>
         </form>
 
         <?php
@@ -134,14 +133,25 @@
             }
         }
 
-        function printClubTable() { //prints results from a select statement
-            $result = executePlainSQL("SELECT * FROM Club");
-            echo "<br>Retrieved data from table Club:<br> <p> </p>";
+        function printTable($result) { //prints the statement
+            $ncols = oci_num_fields($result);
+
+            echo "<br>Retrieved data: <br> <p> </p>";
             echo "<table>";
-            echo "<tr><th>Club_ID</th><th>Name</th><th>Country</th><th>City</th><th>Ownership</th></tr>";
+
+            echo "<tr>";
+            for ($i = 1; $i <= $ncols; $i++) {
+                $column_name  = oci_field_name($result, $i);
+                echo "<th>$column_name</th>";
+            }
+            echo "</tr>";
 
             while ($row = OCI_Fetch_Array($result, OCI_BOTH)) {
-                echo "<tr><td>" . $row["CLUBID"] . "</td><td>" . $row["CLUB_NAME"] . "</td><td>" . $row["COUNTRY"] . "</td><td>" . $row["CITY"] . "</td><td>" . $row["OWNERSHIP"] . "</td></tr>"; 
+                echo "<tr>";
+                for ($i = 0; $i < $ncols; $i++) {
+                   echo "<td>" . $row[$i] . "</td>";
+                }
+                echo "</tr>";
             }
 
             echo "</table>";
@@ -173,30 +183,6 @@
             OCILogoff($db_conn);
         }
 
-        function handleUpdateRequest() {
-            global $db_conn;
-
-            $old_name = $_POST['oldName'];
-            $new_name = $_POST['newName'];
-
-            // you need the wrap the old name and new name values with single quotations
-            executePlainSQL("UPDATE demoTable SET name='" . $new_name . "' WHERE name='" . $old_name . "'");
-            OCICommit($db_conn);
-        }
-
-        /*
-
-        function handleResetRequest() {
-            global $db_conn;
-            // Drop old table
-            executePlainSQL("DROP TABLE demoTable");
-
-            // Create new table
-            echo "<br> creating new table <br>";
-            executePlainSQL("CREATE TABLE demoTable (id int PRIMARY KEY, name char(30))");
-            OCICommit($db_conn);
-        }
-        */
 
         function handleShowRequest() {
             global $db_conn;
@@ -204,48 +190,57 @@
             $table_name = $_GET['tName'];
 
             switch($table_name) {
-                case 'Club': 
-                    printClubTable();
+                case "Coach": 
+                    $sql_statement = executePlainSQL("SELECT * FROM Coach_C2");
                     break;
-                case 'Player': 
-                    echo "<br> Player <br>";
+                case "Player and team":
+                    $sql_statement = executePlainSQL("SELECT * FROM Player p, PlayerPlaysForTeam pt WHERE p.PID = pt.PID");
                     break;
-                case 'Game': 
-                    echo "<br> Game <br>";
-                    break;
-                case 'teamPlaysInGame': 
-                    echo "<br> teamPlaysInGame <br>";
+                case "Game and stage": 
+                    $sql_statement = executePlainSQL("SELECT DISTINCT g.GID, g.address, g.postal_code, g.date_played, g.referee, g.winner, g.goals_scored, gis.SID FROM Game g, GameIsInStage gis WHERE g.GID = gis.GID ORDER BY g.date_played");
                     break;
             }
+
+            echo "<br>Table $table_name <br>";
+            printTable($sql_statement);
             
         }
 
-        function handleInsertRequest() {
+        function handleGroupByRequest() {
             global $db_conn;
 
-            //Getting the values from user and insert data into the table
-            $tuple = array (
-                ":bind1" => $_POST['insNo'],
-                ":bind2" => $_POST['insName']
-            );
+            $least_or_most = $_POST['coach_experience'];
 
-            $alltuples = array (
-                $tuple
-            );
-
-            executeBoundSQL("insert into demoTable values (:bind1, :bind2)", $alltuples);
-            OCICommit($db_conn);
-        }
-
-        function handleCountRequest() {
-            global $db_conn;
-
-            $result = executePlainSQL("SELECT Count(*) FROM Club");
-
-            if (($row = oci_fetch_row($result)) != false) {
-                echo "<br> The number of tuples in Club: " . $row[0] . "<br>";
+            if ($least_or_most == 'least') {
+                $result = executePlainSQL("SELECT nationality, MIN(years_of_experience) FROM Coach_C2 GROUP BY nationality");
+            } else {
+                $result = executePlainSQL("SELECT nationality, MAX(years_of_experience) FROM Coach_C2 GROUP BY nationality");
             }
 
+            printTable($result);
+        }
+
+        function handleHavingRequest() {
+            global $db_conn;
+
+            $years_spent = $_POST['yearsSpent'];
+            $entries = $_POST['entries'];
+
+            $currentDate = new DateTime();
+            $year = $currentDate->format("Y");
+
+            $result = executePlainSQL("SELECT position, MIN(date_of_birth) AS date_of_birth FROM Player p, PlayerPlaysForTeam pt WHERE p.PID = pt.PID AND $year-pt.year_started >= $years_spent GROUP BY position HAVING COUNT(p.PID) >= $entries"); 
+            printTable($result);
+        }
+
+        function handleNestedRequest() {
+            global $db_conn;
+
+            //$sqlstatement = executePlainSQL("SELECT tg.clubID, AVG(tg.goals) FROM teamPlaysInGame tg, GameIsInStage gs WHERE tg.GID = gs.GID AND tg.clubID = gs.clubID AND tg.team_name = gs.team_name GROUP BY tg.clubID HAVING AVG(tg.goals) <= all(SELECT AVG(g.goals_scored) FROM Game g, GameIsInStage gst WHERE g.GID = gst.GID  GROUP BY gst.SID)");
+            $sqlstatement = executePlainSQL("SELECT DISTINCT g.GID, gis.SID, g.goals_scored FROM Game g, GameIsInStage gis WHERE g.GID = gis.GID AND g.goals_scored >= ALL(SELECT AVG(g2.goals_scored) FROM Game g2, GameIsInStage gis2 WHERE g2.GID = gis2.GID GROUP BY gis2.SID) ORDER BY gis.SID desc"); 
+
+
+            printTable($sqlstatement);
         }
 
         // HANDLE ALL POST ROUTES
@@ -254,12 +249,13 @@
             if (connectToDB()) {
                 if (array_key_exists('showTablesRequest', $_POST)) {
                     handleShowRequest();
-                } else if (array_key_exists('updateQueryRequest', $_POST)) {
-                    handleUpdateRequest();
-                } else if (array_key_exists('insertQueryRequest', $_POST)) {
-                    handleInsertRequest();
+                } else if (array_key_exists('havingQueryRequest', $_POST)) {
+                    handleHavingRequest();
+                } else if (array_key_exists('groupByQueryRequest', $_POST)) {
+                    handleGroupByRequest();
+                } else if (array_key_exists('nestedQueryRequest', $_POST)) {
+                    handleNestedRequest();
                 }
-
                 disconnectFromDB();
             }
         }
@@ -272,15 +268,15 @@
                     handleCountRequest();
                 } else if (array_key_exists('showSubmit', $_GET)) {
                     handleShowRequest();
-                }
+                } 
 
                 disconnectFromDB();
             }
         }
 
-		if (isset($_POST['updateSubmit']) || isset($_POST['insertSubmit'])) {
+		if (isset($_POST['havingSubmit']) || isset($_POST['groupBySubmit']) || isset($_POST['nestedSubmit'])) {
             handlePOSTRequest();
-        } else if (isset($_GET['countTupleRequest']) || isset($_GET['showTablesRequest'])) {
+        } else if (isset($_GET['showTablesRequest'])) {
             handleGETRequest();
         }
 		?>
