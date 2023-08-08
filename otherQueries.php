@@ -12,7 +12,7 @@
         <p>If you wish to see any table, select its name and press on the display button.</p>
 
         <form method="GET" action="otherQueries.php">
-            <input type="hidden" id="showTablesRequest" name="showTablesRequest">
+            <input type="hidden" id="displayTablesRequest" name="displayTablesRequest">
             Table: <select name="table_name">
                 <option>Player</option>
                 <option>Team</option>
@@ -195,7 +195,7 @@
 
             // Your username is ora_(CWL_ID) and the password is a(student number). For example,
 			// ora_platypus is the username and a12345678 is the password.
-            $db_conn = OCILogon("ora_diakel", "a95044343", "dbhost.students.cs.ubc.ca:1522/stu");
+            $db_conn = OCILogon("ora_zhangi1", "a29544764", "dbhost.students.cs.ubc.ca:1522/stu");
 
             if ($db_conn) {
                 debugAlertMessage("Database is Connected");
@@ -217,7 +217,7 @@
 
         function handleShowRequest() {
             global $db_conn;
-            $table_name = $_GET['tName'];
+            $table_name = $_GET['table_name'];
 
             switch($table_name) {
                 case "Player": 
@@ -387,17 +387,16 @@
         if (connectToDB()) {
             if (array_key_exists('countTuples', $_GET)) {
                 handleCountRequest();
-            } else if (array_key_exists('showSubmit', $_GET)) {
+            } else if (array_key_exists('displayTuples', $_GET)) {
                 handleShowRequest();
             } 
-
             disconnectFromDB();
         }
     }
 
-    if (isset($_POST['havingSubmit']) || isset($_POST['groupBySubmit']) || isset($_POST['nestedSubmit'])) {
+    if (isset($_POST['selectTableAttribute']) || isset($_POST['projectTable']) || isset($_POST['joinTables'] )) {
         handlePOSTRequest();
-    } else if (isset($_GET['showTablesRequest'])) {
+    } else if (isset($_GET['displayTuples'])|| isset($_GET['countTuples'])) {
         handleGETRequest();
     }
     ?>
