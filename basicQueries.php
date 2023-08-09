@@ -44,6 +44,7 @@
 
         <h2>Update Clubs in Table</h2>
         <p>The values are case sensitive and if you enter in the wrong case, the update statement will not do anything.</p>
+				<p>You are free to select which attribute to update but need to provide a ClubID to indicate which tuple to update.</p>
         <form method="POST" action="basicQueries.php"> <!--refresh page when submitted-->
             <input type="hidden" id="updateQueryRequest" name="updateQueryRequest">
 						Table: <select name="cAttibutes"> 
