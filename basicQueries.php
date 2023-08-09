@@ -1,12 +1,15 @@
-	<html>
+<html>
     <head>
+		<title>Basic Queries</title>
+        <link href="styles.css" type="text/css" rel="stylesheet"> 
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter&family=Open+Sans:wght@300&display=swap" rel="stylesheet">
         <title>Basic queries</title>
     </head>
-
     <body>
         <h2>Display Tables</h2>
         <p>If you wish to see any table, select its name and press on the display button.</p>
-
         <form method="GET" action="basicQueries.php">
             <!-- if you want another page to load after the button is clicked, you have to specify that page in the action parameter -->
             <input type="hidden" id="displayTablesRequest" name="displayTablesRequest">
@@ -34,29 +37,34 @@
             <input type="hidden" id="insertQueryRequest" name="insertQueryRequest">
             ClubID: <input type="text" name="insID"> <br /><br />
             Team Name: <input type="text" name="insName"> <br /><br />
-            <input type="submit" value="Insert" name="insertTuples"></p>
+            <p><input type="submit" value="Insert" name="insertTuples"></p>
         </form>
 
         <hr />
 
-        <h2>Update Team Names in Table</h2>
+        <h2>Update Clubs in Table</h2>
         <p>The values are case sensitive and if you enter in the wrong case, the update statement will not do anything.</p>
-
         <form method="POST" action="basicQueries.php"> <!--refresh page when submitted-->
             <input type="hidden" id="updateQueryRequest" name="updateQueryRequest">
-            Old Team Name: <input type="text" name="oldName"> <br /><br />
-            New Team Name: <input type="text" name="newName"> <br /><br />
-            <input type="submit" value="Update" name="updateTuples"></p>
+						Table: <select name="cAttibutes"> 
+                    <option>club_name</option>
+                    <option>country</option>
+                    <option>city</option>
+										<option>ownership</option>
+                  </select> <br /> <br />
+						ClubID: <input type="text" name="clubID"> <br /><br />
+						Old Value: <input type="text" name="oldValue"> <br /><br />
+            New Value: <input type="text" name="newValue"> <br /><br />
+						<p><input type="submit" value="Update" name="updateTuples"></p>
         </form>
 
         <hr />
 
-        <h2>Delete Teams from Table</h2>
+        <h2>Delete Agents from Table</h2>
         <form method="POST" action="basicQueries.php"> <!--refresh page when submitted-->
             <input type="hidden" id="deleteQueryRequest" name="deleteQueryRequest">
-						ClubID: <input type="text" name="insID"> <br /><br />
-            Team Name: <input type="text" name="insName"> <br /><br />
-            <input type="submit" value="Delete" name="deleteTuples"></p>
+						AgentID: <input type="text" name="insID"> <br /><br />
+            <p><input type="submit" value="Delete" name="deleteTuples"></p>
         </form>
 
 				<hr />
@@ -78,7 +86,7 @@
                     <option>Stadium_PCO</option>
                     <option>Stage</option>
                   </select> <br /> <br />
-            <input type="submit" value="Count" name="countTuples"></p>
+            <p><input type="submit" value="Count" name="countTuples"></p>
         </form>
 
         <?php
@@ -272,25 +280,26 @@
 
 				function handleUpdateRequest() {
 					global $db_conn;
-					$team_table = "Team";
-
-					$old_name = $_POST['oldName'];
-					$new_name = $_POST['newName'];
+					$team_table = "Club";
+					$attribute_name = $_POST['cAttibutes']; 
+					
+					$club_id = $_POST['clubID'];
+					$old_val = $_POST['oldValue'];
+					$new_val = $_POST['newValue'];
 
 					// you need the wrap the old name and new name values with single quotations
-					executePlainSQL("UPDATE $team_table SET team_name='" . $new_name . "' WHERE team_name='" . $old_name . "'");
+					executePlainSQL("UPDATE $team_table SET $attribute_name = '" . $new_val . "' WHERE clubID = '$club_id' AND $attribute_name = '" . $old_val . "'");
 					OCICommit($db_conn);
 			}
 
 			function handleDeleteRequest() {
 				global $db_conn;
-				$team_table = "Team";
+				$club_table = "Agent";
 
 				//Getting the values from user and delete data from the table
 				$insID = isset($_POST['insID']) ? $_POST['insID'] : '';
-			  $insName = isset($_POST['insName']) ? $_POST['insName'] : '';
 
-				executePlainSQL("DELETE FROM $team_table WHERE clubID = '$insID' AND team_name = '$insName'");
+				executePlainSQL("DELETE FROM $club_table WHERE AID = '$insID'");
 				OCICommit($db_conn);
 		}
 
