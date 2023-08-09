@@ -1,8 +1,11 @@
 <html>
     <head>
-        <title> 
-            Selection, Projection, Join, Division
-        </title>
+        <head>
+        <title>Selection, Projection, Join, Division</title>
+        <link href="styles.css" type="text/css" rel="stylesheet"> 
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter&family=Open+Sans:wght@300&display=swap" rel="stylesheet">
     </head>
 
     <body>
@@ -81,7 +84,7 @@
 
         <hr />
 
-        <h2>Count the Tuples in Displayed Table</h2>
+  <!--       <h2>Count the Tuples in Displayed Table</h2>
         <form method="GET" action="otherQueries.php">
             <input type="hidden" id="countQueryRequest" name="countQueryRequest">
 						Table: <select name="tName"> 
@@ -99,7 +102,7 @@
                     <option>Stage</option>
                   </select> <br /> <br />
             <input type="submit" value="Count" name="countTuples"></p>
-        </form>
+        </form> -->
 
         <?php
         $success = True; //keep track of errors so it redirects the page only if there are no errors
@@ -284,15 +287,15 @@
         OCICommit($db_conn);
     }
 
-    function handleCountRequest() {
-        global $db_conn;
+    // function handleCountRequest() {
+    //     global $db_conn;
 
-        $result = executePlainSQL("SELECT Count(*) FROM demoTable");
+    //     $result = executePlainSQL("SELECT Count(*) FROM demoTable");
 
-        if (($row = oci_fetch_row($result)) != false) {
-            echo "<br> The number of tuples in demoTable: " . $row[0] . "<br>";
-        }
-    }
+    //     if (($row = oci_fetch_row($result)) != false) {
+    //         echo "<br> The number of tuples in demoTable: " . $row[0] . "<br>";
+    //     }
+    // }
 
         function handleSelectionRequest() {
         global $db_conn;
@@ -342,14 +345,9 @@
 
     function handleDivisionRequest() {
 
-        $result = executePlainSQL("SELECT T.team_name FROM teamPlaysInGame T, GameIsInStage G WHERE NOT EXISTS SELECT T1.GID FROM GameIsInStage T1 WHERE T1.GID=G.GID EXCEPT (SELECT GID FROM GameIsInStage");
-
-        // $result = executePlainSQL("SELECT team_name FROM teamPlaysInGame T");
+        $result = executePlainSQL("SELECT T.team_name FROM teamPlaysInGame T, GameIsInStage G WHERE NOT EXISTS ((SELECT T1.GID FROM GameIsInStage T1 WHERE T1.GID=G.GID) EXCEPT (SELECT GID FROM GameIsInStage");
 
         printTable($result);
-
-
-        // divide team by all stages in the tournament
     }
 
     // HANDLE ALL POST ROUTES
@@ -374,9 +372,9 @@
 	// A better coding practice is to have one method that reroutes your requests accordingly. It will make it easier to add/remove functionality.
     function handleGETRequest() {
         if (connectToDB()) {
-            if (array_key_exists('countTuples', $_GET)) {
-                handleCountRequest();
-            } else if (array_key_exists('displayTuples', $_GET)) {
+            // if (array_key_exists('countTuples', $_GET)) {
+            //     handleCountRequest(); }
+            if (array_key_exists('displayTuples', $_GET)) {
                 handleShowRequest();
             } 
             disconnectFromDB();
@@ -385,7 +383,7 @@
 
     if (isset($_POST['selectTableAttribute']) || isset($_POST['projectTable']) || isset($_POST['joinTables']) || isset($_POST['divideTables'])) {
         handlePOSTRequest();
-    } else if (isset($_GET['displayTuples'])|| isset($_GET['countTuples'])) {
+    } else if (isset($_GET['displayTuples'])) {
         handleGETRequest();
     }
     ?>
