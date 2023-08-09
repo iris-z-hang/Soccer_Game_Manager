@@ -38,6 +38,9 @@
                 <option>Stadium_PCI</option>
                 <option>Stadium_PCO</option>
                 <option>Stage</option>
+                <option>PlayerPlaysForTeam</option>
+                <option>teamPlaysInGame</option>
+                <option>GameIsInStage</option>
             </select> <br /> <br />
             <p><input type="submit" value="Display" name="displayTuples"></p>
         </form>
@@ -249,6 +252,13 @@
                 case "Stage": 
                         $sql_statement = executePlainSQL("SELECT * FROM Stage");
                         break;
+                case "PlayerPlaysForTeam";
+                        $sql_statement = executePlainSQL("SELECT * FROM PlayerPlaysForTeam");
+                        break;
+                case "teamPlaysInGame";
+                        $sql_statement = executePlainSQL("SELECT * FROM teamPlaysInGame");
+                case 'GameIsInStage';
+                        $sql_statement = executePlainSQL("SELECT * FROM GameIsInStage");
         }
 
         echo "<br>Table $table_name <br>";
@@ -302,7 +312,7 @@
 
         $condition = $_POST['joinCond'];
 
-        $result = executePlainSQL("SELECT " . $attribute . " FROM " . $table_one . ", " . $table_two . " WHERE " . $condition . "");
+        $result = executePlainSQL("SELECT DISTINCT " . $attribute . " FROM " . $table_one . ", " . $table_two . " WHERE " . $condition . "");
         printTable($result);
 
         OCICommit($db_conn);
@@ -313,6 +323,7 @@
         $result = executePlainSQL("SELECT DISTINCT T.team_name FROM teamPlaysInGame T WHERE NOT EXISTS (SELECT SID FROM Stage MINUS SELECT G2.SID FROM GameIsInStage G2 WHERE G2.team_name=T.team_name)");
 
         printTable($result);
+        OCICommit($db_conn);
     }
 
     function handlePOSTRequest() {
