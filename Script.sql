@@ -14,6 +14,7 @@ CREATE TABLE Player (
     national_team char(3), 
     position char(20),
     FOREIGN KEY (AID) REFERENCES Agent (AID)
+        ON DELETE CASCADE
 );
 
 CREATE TABLE Club (
@@ -38,7 +39,8 @@ CREATE TABLE PlayerPlaysForTeam (
     team_name char(20), 
     year_started int,
     PRIMARY KEY (PID, clubID, team_name),
-    FOREIGN KEY (PID) REFERENCES Player (PID),
+    FOREIGN KEY (PID) REFERENCES Player (PID)
+        ON DELETE CASCADE,
     FOREIGN KEY (clubID, team_name) REFERENCES Team (clubID, team_name)
 );
 
