@@ -6,6 +6,15 @@
     </head>
 
     <body>
+        <h2>Reset</h2>
+        <p>If you wish to reset the table press on the reset button.
+
+        <form method="POST" action="otherQueries.php">
+            <input type="hidden" id="resetTablesRequest" name="resetTablesRequest">
+            <p><input type="submit" value="Reset" name="reset"></p>
+        </form>
+        <hr />
+
         <h2>
             Table display
         </h2>
@@ -41,16 +50,15 @@
             <input type="submit" value="Select" name="selectTuples"></p>
         </form>
 
-        <hr />
-
-        <h2>Select Columns in a Table</h2>
+        <h2>Select Columns in a Table (Projection)</h2>
         <form method="POST" action="otherQueries.php">
             <input type="hidden" id="projectTable" name="projectTable">
             Attribute: <input type="text" name="projectAttribute"> <br /><br />
             Table: <input type="text" name="projectTable"> <br /><br />
-            Condition 1: <input type="text" name="projectCond1"> <br /><br />
-            Condition 2: <input type="text" name="projectCond2"> <br /><br />
-            Condition 3: <input type="text" name="projectCond3"> <br /><br />
+            <!-- Condition: <input type="text" name="projectCond"> <br /><br /> -->
+            <!-- Condition 2: <input type="text" name="projectCond2"> <br /><br />
+            Condition 3: <input type="text" name="projectCond3"> <br /><br /> -->
+            <input type="submit" value="Project" name="projectTuples"></p>
         </form>
 
         <h2>Join Tables</h2>
@@ -59,8 +67,8 @@
             Attribute: <input type="text" name="joinAttribute"> <br /><br />
             First Table: <input type="text" name="joinTableOne"> <br /><br />
             Second Table: <input type="text" name="joinTableTwo"> <br /><br />
-            Condition 1: <input type="text" name="joinCond1"> <br /><br />
-            Condition 2: <input type="text" name="joinCond2"> <br /><br />
+            Condition: <input type="text" name="joinCond"> <br /><br />
+            <input type="submit" value="Join" name="joinTuples"></p>
         </form>
 
         <h2>Divide Tables</h2>
@@ -68,6 +76,7 @@
             <input type="hidden" id="divideTables" name="divideTables">
             First Table: <input type="text" name="divideTableOne"> <br /><br />
             Second Table: <input type="text" name="divideTableTwo"> <br /><br />
+            <input type="submit" value="Divide" name="divideTuples"></p>
         </form>
 
         <hr />
@@ -195,7 +204,9 @@
 
             // Your username is ora_(CWL_ID) and the password is a(student number). For example,
 			// ora_platypus is the username and a12345678 is the password.
+            // $db_conn = OCILogon("ora_zhangi1", "a29544764", "dbhost.students.cs.ubc.ca:1522/stu");
             $db_conn = OCILogon("ora_zhangi1", "a29544764", "dbhost.students.cs.ubc.ca:1522/stu");
+
 
             if ($db_conn) {
                 debugAlertMessage("Database is Connected");
@@ -262,17 +273,6 @@
         printTable($sql_statement);
     }
 
-    function handleUpdateRequest() {
-        global $db_conn;
-
-        $old_name = $_POST['oldName'];
-        $new_name = $_POST['newName'];
-
-        // you need the wrap the old name and new name values with single quotations
-        executePlainSQL("UPDATE demoTable SET name='" . $new_name . "' WHERE name='" . $old_name . "'");
-        OCICommit($db_conn);
-    }
-
     function handleResetRequest() {
         global $db_conn;
         // Drop old table
@@ -281,23 +281,6 @@
         // Create new table
         echo "<br> creating new table <br>";
         executePlainSQL("CREATE TABLE demoTable (id int PRIMARY KEY, name char(30))");
-        OCICommit($db_conn);
-    }
-
-    function handleInsertRequest() {
-        global $db_conn;
-
-        //Getting the values from user and insert data into the table
-        $tuple = array (
-            ":bind1" => $_POST['insNo'],
-            ":bind2" => $_POST['insName']
-        );
-
-        $alltuples = array (
-            $tuple
-        );
-
-        executeBoundSQL("insert into demoTable values (:bind1, :bind2)", $alltuples);
         OCICommit($db_conn);
     }
 
@@ -311,14 +294,14 @@
         }
     }
 
-    function handleSelectionRequest() {
+        function handleSelectionRequest() {
         global $db_conn;
 
         $table = $_POST['selectTable'];
         $attribute = $_POST['selectAttribute'];
         $condition = $_POST['selectCondition'];
 
-        $result = executePlainSQL("SELECT " . $attribute . " FROM " . $table . " WHERE" . $condition . "");
+        $result = executePlainSQL("SELECT " . $attribute . " FROM " . $table . " WHERE " . $condition . "");
         printTable($result);
 
         OCICommit($db_conn);
@@ -330,11 +313,11 @@
 
         $attribute = $_POST['projectAttribute'];
         $table = $_POST['projectTable'];
-        $condition1 = $_POST['projectCond1'];
-        $condition2 = $_POST['projectCond2'];
-        $condition3 = $_POST['projectCond3'];
+        // $condition = $_POST['projectCond'];
+        // $condition2 = $_POST['projectCond2'];
+        // $condition3 = $_POST['projectCond3'];
         
-        $result = executePlainSQL("SELECT " . $attribute . " FROM " . $table . " WHERE " . $condition1 . ", " . $condition2 . ", " . $condition3 . "");
+        $result = executePlainSQL("SELECT " . $attribute . " FROM " . $table . "");
         printTable($result);
 
         OCICommit($db_conn);
@@ -348,20 +331,26 @@
         $table_one = $_POST['joinTableOne'];
         $table_two = $_POST['joinTableTwo'];
 
-        $condition1 = $_POST['joinCond1'];
-        $condition2 = $_POST['joinCond2'];
+        $condition = $_POST['joinCond'];
 
-        $result = executePlainSQL("SELECT " . $attribute . " FROM " . $table_one . ", " . $table_two . " WHERE " . $condition1 . ", " . $condition2 . "");
+        $result = executePlainSQL("SELECT " . $attribute . " FROM " . $table_one . ", " . $table_two . " WHERE " . $condition . "");
         printTable($result);
 
         OCICommit($db_conn);
         
     }
 
-    // function handleDivisionRequest() {
-    //     $table_one = ;
-    //     $table_two = ;
-    // }
+    function handleDivisionRequest() {
+
+        $result = executePlainSQL("SELECT T.team_name FROM teamPlaysInGame T, GameIsInStage G WHERE NOT EXISTS SELECT T1.GID FROM GameIsInStage T1 WHERE T1.GID=G.GID EXCEPT (SELECT GID FROM GameIsInStage");
+
+        // $result = executePlainSQL("SELECT team_name FROM teamPlaysInGame T");
+
+        printTable($result);
+
+
+        // divide team by all stages in the tournament
+    }
 
     // HANDLE ALL POST ROUTES
 	// A better coding practice is to have one method that reroutes your requests accordingly. It will make it easier to add/remove functionality.
@@ -374,9 +363,9 @@
             } else if (array_key_exists('joinTables', $_POST)) {
                 handleJoinRequest();
             } 
-            // else if (array_key_exists('divideTables', $_POST)) {
-            //     handleDivisionRequest();
-            // }
+            else if (array_key_exists('divideTables', $_POST)) {
+                handleDivisionRequest();
+            }
 
             disconnectFromDB();
         }
@@ -394,7 +383,7 @@
         }
     }
 
-    if (isset($_POST['selectTableAttribute']) || isset($_POST['projectTable']) || isset($_POST['joinTables'] )) {
+    if (isset($_POST['selectTableAttribute']) || isset($_POST['projectTable']) || isset($_POST['joinTables']) || isset($_POST['divideTables'])) {
         handlePOSTRequest();
     } else if (isset($_GET['displayTuples'])|| isset($_GET['countTuples'])) {
         handleGETRequest();
